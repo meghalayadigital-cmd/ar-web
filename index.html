@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Meghalaya AR</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+<style>
+
+body{
+margin:0;
+overflow:hidden;
+background:black;
+}
+
+#fullscreenVideo{
+position:fixed;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+object-fit:contain;
+background:black;
+display:none;
+z-index:9999;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<video
+id="fullscreenVideo"
+playsinline
+webkit-playsinline
+autoplay
+></video>
+
+
+<a-scene
+mindar-image="imageTargetSrc: ./targets.mind; maxTrack: 1;"
+color-space="sRGB"
+renderer="colorManagement: true"
+vr-mode-ui="enabled: false"
+device-orientation-permission-ui="enabled: false"
+>
+
+<a-assets></a-assets>
+
+<a-camera
+position="0 0 0"
+look-controls="enabled: false"
+></a-camera>
+
+</a-scene>
+
+
+<script>
+
+const fullscreenVideo = document.getElementById("fullscreenVideo");
+const scene = document.querySelector("a-scene");
+
+const MAX_TARGETS = 30;
+
+
+function formatNumber(num){
+return String(num).padStart(3,'0');
+}
+
+
+function playVideo(index){
+
+const videoName = formatNumber(index+1);
+
+fullscreenVideo.src = "./videos/"+videoName+".mp4";
+
+fullscreenVideo.style.display="block";
+
+fullscreenVideo.play().catch(()=>{});
+
+}
+
+
+function stopVideo(){
+
+fullscreenVideo.pause();
+
+fullscreenVideo.currentTime=0;
+
+fullscreenVideo.style.display="none";
+
+}
+
+
+for(let i=0;i<MAX_TARGETS;i++){
+
+const entity=document.createElement("a-entity");
+
+entity.setAttribute(
+"mindar-image-target",
+"targetIndex: "+i
+);
+
+entity.addEventListener("targetFound",()=>{
+
+playVideo(i);
+
+});
+
+entity.addEventListener("targetLost",stopVideo);
+
+scene.appendChild(entity);
+
+}
+
+
+
+if("serviceWorker" in navigator){
+
+navigator.serviceWorker.register("./service-worker.js")
+
+.then(()=>{
+
+console.log("PWA Service Worker Registered");
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
